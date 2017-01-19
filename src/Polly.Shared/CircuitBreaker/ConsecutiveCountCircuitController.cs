@@ -1,4 +1,5 @@
 ﻿using System;
+using Polly.Shared.CircuitBreaker;
 using Polly.Utilities;
 
 namespace Polly.CircuitBreaker
@@ -6,24 +7,41 @@ namespace Polly.CircuitBreaker
     internal class ConsecutiveCountCircuitController<TResult> : CircuitStateController<TResult>
     {
         private readonly int _exceptionsAllowedBeforeBreaking;
-        private int _count;
+        private readonly IHealthMetrics _metrics;
 
         public ConsecutiveCountCircuitController(
-            int exceptionsAllowedBeforeBreaking, 
-            TimeSpan durationOfBreak, 
-            Action<DelegateResult<TResult>, TimeSpan, Context> onBreak, 
-            Action<Context> onReset, 
+            int exceptionsAllowedBeforeBreaking,
+            TimeSpan durationOfBreak,
+            Action<DelegateResult<TResult>, TimeSpan, Context> onBreak,
+            Action<Context> onReset,
             Action onHalfOpen
             ) : base(durationOfBreak, onBreak, onReset, onHalfOpen)
         {
             _exceptionsAllowedBeforeBreaking = exceptionsAllowedBeforeBreaking;
+
+            _metrics = new UnsampledHealthMetrics();
+        }
+
+        public override IHealthCount HealthCount
+        {
+            get
+            {
+                using (TimedLock.Lock(_lock))
+                {
+                    return _metrics.GetHealthCount_NeedsLock();
+                }
+            }
         }
 
         public override void OnCircuitReset(Context context)
         {
             using (TimedLock.Lock(_lock))
             {
-                _count = 0;
+                // Is only null during initialization of the current class
+                // as the variable is not set, before the base class calls
+                // current method from constructor.
+                if (_metrics != null)
+                    _metrics.Reset_NeedsLock();
 
                 ResetInternal_NeedsLock(context);
             }
@@ -39,9 +57,11 @@ namespace Polly.CircuitBreaker
                         OnCircuitReset(context);
                         break;
                     case CircuitState.Closed:
-                        _count = 0;
+                        _metrics.IncrementSuccess_NeedsLock();
                         break;
                 }
+
+                SuccessInternal_NeedsLock(context);
             }
         }
 
@@ -57,11 +77,16 @@ namespace Polly.CircuitBreaker
                     return;
                 }
 
-                _count += 1;
-                if (_count >= _exceptionsAllowedBeforeBreaking)
+                _metrics.IncrementFailure_NeedsLock();
+
+                var healthCount = _metrics.GetHealthCount_NeedsLock();
+
+                if (healthCount.Failures >= _exceptionsAllowedBeforeBreaking)
                 {
                     Break_NeedsLock(context);
                 }
+
+                FailureInternal_NeedsLock(context);
             }
         }
     }

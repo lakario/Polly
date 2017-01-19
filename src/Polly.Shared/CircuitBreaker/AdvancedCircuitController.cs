@@ -8,9 +8,9 @@ namespace Polly.CircuitBreaker
         private const short NumberOfWindows = 10;
         internal static readonly long ResolutionOfCircuitTimer = TimeSpan.FromMilliseconds(20).Ticks;
 
-        private readonly IHealthMetrics _metrics;
         private readonly double _failureThreshold;
         private readonly int _minimumThroughput;
+        private readonly IHealthMetrics _metrics;
 
         public AdvancedCircuitController(
             double failureThreshold, 
@@ -28,6 +28,17 @@ namespace Polly.CircuitBreaker
 
             _failureThreshold = failureThreshold;
             _minimumThroughput = minimumThroughput;
+        }
+
+        public override IHealthCount HealthCount
+        {
+            get
+            {
+                using (TimedLock.Lock(_lock))
+                {
+                    return _metrics.GetHealthCount_NeedsLock();
+                }
+            }
         }
 
         public override void OnCircuitReset(Context context)
@@ -51,6 +62,8 @@ namespace Polly.CircuitBreaker
                 if (_circuitState == CircuitState.HalfOpen) { OnCircuitReset(context); }
 
                 _metrics.IncrementSuccess_NeedsLock();
+
+                SuccessInternal_NeedsLock(context);
             }
         }
 
@@ -75,9 +88,8 @@ namespace Polly.CircuitBreaker
                     Break_NeedsLock(context);
                 }
 
+                FailureInternal_NeedsLock(context);
             }
         }
-
-
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Polly.Utilities;
 
 namespace Polly.CircuitBreaker
@@ -40,19 +41,22 @@ namespace Polly.CircuitBreaker
             _windows.Clear();
         }
 
-        public HealthCount GetHealthCount_NeedsLock()
+        public IHealthCount GetHealthCount_NeedsLock()
         {
             ActualiseCurrentMetric_NeedsLock();
 
-            int successes = 0;
-            int failures = 0;
+            int successes = 0,
+                failures = 0;
+
             foreach (var window in _windows)
             {
                 successes += window.Successes;
                 failures += window.Failures;
             }
 
-            return new HealthCount
+            var top = _windows.Peek();
+
+            return new HealthCount(top.StartedAt)
             {
                 Successes = successes,
                 Failures = failures,
@@ -65,7 +69,7 @@ namespace Polly.CircuitBreaker
             long now = SystemClock.UtcNow().Ticks;
             if (_currentWindow == null || now - _currentWindow.StartedAt >= _windowDuration)
             {
-                _currentWindow = new HealthCount { StartedAt = now };
+                _currentWindow = new HealthCount(now);
                 _windows.Enqueue(_currentWindow);
             }
 

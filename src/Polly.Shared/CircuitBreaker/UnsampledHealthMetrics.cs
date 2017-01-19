@@ -1,23 +1,16 @@
-﻿using System;
-using Polly.Utilities;
+﻿using Polly.Utilities;
 
 namespace Polly.CircuitBreaker
 {
-    internal class SingleHealthMetrics : IHealthMetrics
+    internal class UnsampledHealthMetrics : IHealthMetrics
     {
-        private readonly long _samplingDuration;
-
-        private HealthCount _current;
-
-        public SingleHealthMetrics(TimeSpan samplingDuration)
-        {
-            _samplingDuration = samplingDuration.Ticks;
-        }
+        protected HealthCount _current;
 
         public void IncrementSuccess_NeedsLock()
         {
             ActualiseCurrentMetric_NeedsLock();
 
+            _current.Failures = 0;
             _current.Successes++;
         }
 
@@ -43,7 +36,7 @@ namespace Polly.CircuitBreaker
         private void ActualiseCurrentMetric_NeedsLock()
         {
             long now = SystemClock.UtcNow().Ticks;
-            if (_current == null || now - _current.StartedAt >= _samplingDuration)
+            if (_current == null)
             {
                 _current = new HealthCount(now);
             }

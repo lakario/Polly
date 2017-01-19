@@ -9,6 +9,6 @@ namespace Polly.CircuitBreaker
 
         void Reset_NeedsLock();
 
-        HealthCount GetHealthCount_NeedsLock();
+        IHealthCount GetHealthCount_NeedsLock();
     }
 }

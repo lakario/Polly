@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Polly.Utilities;
 using System.Threading;
+using Polly.Shared.CircuitBreaker;
 
 namespace Polly.CircuitBreaker
 {
@@ -13,7 +14,7 @@ namespace Polly.CircuitBreaker
         private readonly ICircuitController<EmptyStruct> _breakerController;
 
         internal CircuitBreakerPolicy(
-            Action<Action<CancellationToken>, Context, CancellationToken> exceptionPolicy, 
+            Action<Action<CancellationToken>, Context, CancellationToken> exceptionPolicy,
             IEnumerable<ExceptionPredicate> exceptionPredicates,
             ICircuitController<EmptyStruct> breakerController
             ) : base(exceptionPolicy, exceptionPredicates)
@@ -27,6 +28,22 @@ namespace Polly.CircuitBreaker
         public CircuitState CircuitState
         {
             get { return _breakerController.CircuitState; }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public IHealthCount HealthCount
+        {
+            get { return _breakerController.HealthCount; }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public IObservable<ICircuitEvent> CircuitActivity
+        {
+            get { return _breakerController.CircuitActivity; }
         }
 
         /// <summary>
@@ -62,9 +79,9 @@ namespace Polly.CircuitBreaker
         private readonly ICircuitController<TResult> _breakerController;
 
         internal CircuitBreakerPolicy(
-            Func<Func<CancellationToken, TResult>, Context, CancellationToken, TResult> executionPolicy, 
-            IEnumerable<ExceptionPredicate> exceptionPredicates, 
-            IEnumerable<ResultPredicate<TResult>> resultPredicates, 
+            Func<Func<CancellationToken, TResult>, Context, CancellationToken, TResult> executionPolicy,
+            IEnumerable<ExceptionPredicate> exceptionPredicates,
+            IEnumerable<ResultPredicate<TResult>> resultPredicates,
             ICircuitController<TResult> breakerController
             ) : base(executionPolicy, exceptionPredicates, resultPredicates)
         {

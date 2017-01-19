@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Reactive.Subjects;
+using Polly.Shared.CircuitBreaker;
 using Polly.Utilities;
 
 namespace Polly.CircuitBreaker
@@ -13,12 +15,9 @@ namespace Polly.CircuitBreaker
         protected readonly Action<Context> _onReset;
         protected readonly Action _onHalfOpen;
         protected readonly object _lock = new object();
+        protected readonly Subject<ICircuitEvent> _circuitActivitySubject;
 
-        protected CircuitStateController(
-            TimeSpan durationOfBreak, 
-            Action<DelegateResult<TResult>, TimeSpan, Context> onBreak, 
-            Action<Context> onReset, 
-            Action onHalfOpen)
+        protected CircuitStateController(TimeSpan durationOfBreak, Action<DelegateResult<TResult>, TimeSpan, Context> onBreak, Action<Context> onReset, Action onHalfOpen)
         {
             _durationOfBreak = durationOfBreak;
             _onBreak = onBreak;
@@ -27,7 +26,11 @@ namespace Polly.CircuitBreaker
 
             _circuitState = CircuitState.Closed;
             Reset();
+
+            _circuitActivitySubject = new Subject<ICircuitEvent>();
         }
+
+        public IObservable<ICircuitEvent> CircuitActivity => _circuitActivitySubject;
 
         public CircuitState CircuitState
         {
@@ -87,6 +90,13 @@ namespace Polly.CircuitBreaker
                 _lastOutcome = new DelegateResult<TResult>(new IsolatedCircuitException("The circuit is manually held open and is not allowing calls."));
                 BreakFor_NeedsLock(TimeSpan.MaxValue, Context.None);
                 _circuitState = CircuitState.Isolated;
+
+                _circuitActivitySubject?.OnNext(new CircuitEvent
+                {
+                    State = _circuitState,
+                    Ticks = SystemClock.UtcNow().Ticks,
+                    Action = CircuitAction.Isolate
+                });
             }
         }
 
@@ -122,10 +132,47 @@ namespace Polly.CircuitBreaker
             {
                 _onReset(context);
             }
+
+            _circuitActivitySubject?.OnNext(new CircuitEvent
+            {
+                State = _circuitState,
+                Ticks = SystemClock.UtcNow().Ticks,
+                Action = CircuitAction.Reset
+            });
+        }
+
+        protected void SuccessInternal_NeedsLock(Context context)
+        {
+            _circuitActivitySubject?.OnNext(new CircuitEvent
+            {
+                State = _circuitState,
+                Ticks = SystemClock.UtcNow().Ticks,
+                Action = CircuitAction.PostExecute,
+                OutcomeType = OutcomeType.Successful
+            });
+        }
+
+        protected void FailureInternal_NeedsLock(Context context)
+        {
+            _circuitActivitySubject?.OnNext(new CircuitEvent
+            {
+                State = _circuitState,
+                Ticks = SystemClock.UtcNow().Ticks,
+                Action = CircuitAction.PostExecute,
+                OutcomeType = OutcomeType.Failure,
+                Exception = _lastOutcome?.Exception
+            });
         }
 
         public void OnActionPreExecute()
         {
+            _circuitActivitySubject?.OnNext(new CircuitEvent
+            {
+                State = _circuitState,
+                Ticks = SystemClock.UtcNow().Ticks,
+                Action = CircuitAction.PreExecute,
+            });
+
             switch (CircuitState)
             {
                 case CircuitState.Closed:
@@ -147,6 +194,8 @@ namespace Polly.CircuitBreaker
         public abstract void OnActionFailure(DelegateResult<TResult> outcome, Context context);
 
         public abstract void OnCircuitReset(Context context);
+
+        public abstract IHealthCount HealthCount { get; }
     }
 }
 
