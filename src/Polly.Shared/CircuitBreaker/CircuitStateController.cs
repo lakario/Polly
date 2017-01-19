@@ -143,34 +143,40 @@ namespace Polly.CircuitBreaker
 
         protected void SuccessInternal_NeedsLock(Context context)
         {
-            _circuitActivitySubject?.OnNext(new CircuitEvent
+            _circuitActivitySubject?.OnNext(new CircuitExecuteEvent
             {
                 State = _circuitState,
                 Ticks = SystemClock.UtcNow().Ticks,
                 Action = CircuitAction.PostExecute,
-                OutcomeType = OutcomeType.Successful
+                OutcomeType = OutcomeType.Successful,
+                ExecutionGuid = context.ExecutionGuid,
+                ExecutionKey = context.ExecutionKey
             });
         }
 
         protected void FailureInternal_NeedsLock(Context context)
         {
-            _circuitActivitySubject?.OnNext(new CircuitEvent
+            _circuitActivitySubject?.OnNext(new CircuitExecuteEvent
             {
                 State = _circuitState,
                 Ticks = SystemClock.UtcNow().Ticks,
                 Action = CircuitAction.PostExecute,
                 OutcomeType = OutcomeType.Failure,
-                Exception = _lastOutcome?.Exception
+                Exception = _lastOutcome?.Exception,
+                ExecutionGuid = context.ExecutionGuid,
+                ExecutionKey = context.ExecutionKey
             });
         }
 
-        public void OnActionPreExecute()
+        public void OnActionPreExecute(Context context)
         {
-            _circuitActivitySubject?.OnNext(new CircuitEvent
+            _circuitActivitySubject?.OnNext(new CircuitExecuteEvent
             {
                 State = _circuitState,
                 Ticks = SystemClock.UtcNow().Ticks,
                 Action = CircuitAction.PreExecute,
+                ExecutionGuid = context.ExecutionGuid,
+                ExecutionKey = context.ExecutionKey
             });
 
             switch (CircuitState)

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text;
 using Polly.CircuitBreaker;
 
@@ -25,14 +24,6 @@ namespace Polly.Shared.CircuitBreaker
         /// </summary>
         CircuitAction Action { get; }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        OutcomeType? OutcomeType { get; }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        Exception Exception { get; }
+     
     }
 }

@@ -1,5 +1,4 @@
-﻿using System;
-using Polly.CircuitBreaker;
+﻿using Polly.CircuitBreaker;
 
 namespace Polly.Shared.CircuitBreaker
 {
@@ -8,7 +7,6 @@ namespace Polly.Shared.CircuitBreaker
         public long Ticks { get; set; }
         public CircuitState State { get; set; }
         public CircuitAction Action { get; set; }
-        public OutcomeType? OutcomeType { get; set; }
-        public Exception Exception { get; set; }
+      
     }
 }

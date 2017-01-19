@@ -7,15 +7,14 @@ namespace Polly.CircuitBreaker
     {
         IHealthCount HealthCount { get; }
         CircuitState CircuitState { get; }
+        IObservable<ICircuitEvent> CircuitActivity { get; }
         Exception LastException { get; }
         TResult LastHandledResult { get; }
         void Isolate();
         void Reset();
         void OnCircuitReset(Context context);
-        void OnActionPreExecute();
+        void OnActionPreExecute(Context context);
         void OnActionSuccess(Context context);
         void OnActionFailure(DelegateResult<TResult> outcome, Context context);
-
-        IObservable<ICircuitEvent> CircuitActivity { get; }
     }
 }
