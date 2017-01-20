@@ -62,8 +62,6 @@ namespace Polly.CircuitBreaker
                 if (_circuitState == CircuitState.HalfOpen) { OnCircuitReset(context); }
 
                 _metrics.IncrementSuccess_NeedsLock();
-
-                SuccessInternal_NeedsLock(context);
             }
         }
 
@@ -87,8 +85,6 @@ namespace Polly.CircuitBreaker
                 {
                     Break_NeedsLock(context);
                 }
-
-                FailureInternal_NeedsLock(context);
             }
         }
     }

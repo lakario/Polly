@@ -1,6 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <package>
   <metadata>
+    <id>Polly</id>
+    <version>9.9.9.9</version>
     <owners>App vNext</owners>
     <authors>Michael Wolfenden, App vNext</authors>
     <description>
@@ -154,13 +156,9 @@
       <group targetFramework="net45">
         <dependency id="System.Reactive.Linq" version="3.1.1" />
       </group>
-      <group targetFramework="netstandard1.0">
-        <dependency id="NETStandard.Library" version="1.6.0" />
-        <dependency id="System.Reactive" version="3.1.1" />
-      </group>
     </dependencies>
   </metadata>
   <files>
-    <file src="lib\**\*.*" target="lib" exclude="**\*.unsigned" />
+    <file src="Polly.Net45\bin\Release\**\Polly.*" target="lib\net45" exclude="**\*.unsigned" />
   </files>
 </package>

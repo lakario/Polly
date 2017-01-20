@@ -1,4 +1,5 @@
 ﻿using System;
+using Polly.Metrics;
 using Polly.Shared.CircuitBreaker;
 
 namespace Polly.CircuitBreaker
@@ -7,7 +8,6 @@ namespace Polly.CircuitBreaker
     {
         IHealthCount HealthCount { get; }
         CircuitState CircuitState { get; }
-        IObservable<ICircuitEvent> CircuitActivity { get; }
         Exception LastException { get; }
         TResult LastHandledResult { get; }
         void Isolate();

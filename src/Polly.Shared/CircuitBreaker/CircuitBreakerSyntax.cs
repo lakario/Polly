@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Polly.CircuitBreaker;
+using Polly.Metrics;
 using Polly.Utilities;
 
 namespace Polly
@@ -181,6 +182,9 @@ namespace Polly
                 (outcome, timespan, context) => onBreak(outcome.Exception, timespan, context),
                 onReset, 
                 onHalfOpen);
+
+            var metricsService = new EventsBroker();
+
             return new CircuitBreakerPolicy(
                 (action, context, cancellationToken) => CircuitBreakerEngine.Implementation(
                     (ct) => { action(ct); return EmptyStruct.Instance; },
@@ -188,9 +192,11 @@ namespace Polly
                     cancellationToken,
                     policyBuilder.ExceptionPredicates, 
                     PredicateHelper<EmptyStruct>.EmptyResultPredicates, 
-                    breakerController), 
+                    breakerController,
+                    metricsService), 
                 policyBuilder.ExceptionPredicates, 
-                breakerController
+                breakerController,
+                metricsService
                 );
         }
     }

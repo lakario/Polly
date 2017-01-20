@@ -60,8 +60,6 @@ namespace Polly.CircuitBreaker
                         _metrics.IncrementSuccess_NeedsLock();
                         break;
                 }
-
-                SuccessInternal_NeedsLock(context);
             }
         }
 
@@ -85,8 +83,6 @@ namespace Polly.CircuitBreaker
                 {
                     Break_NeedsLock(context);
                 }
-
-                FailureInternal_NeedsLock(context);
             }
         }
     }

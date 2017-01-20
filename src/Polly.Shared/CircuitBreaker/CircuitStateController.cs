@@ -15,7 +15,6 @@ namespace Polly.CircuitBreaker
         protected readonly Action<Context> _onReset;
         protected readonly Action _onHalfOpen;
         protected readonly object _lock = new object();
-        protected readonly Subject<ICircuitEvent> _circuitActivitySubject;
 
         protected CircuitStateController(TimeSpan durationOfBreak, Action<DelegateResult<TResult>, TimeSpan, Context> onBreak, Action<Context> onReset, Action onHalfOpen)
         {
@@ -26,11 +25,7 @@ namespace Polly.CircuitBreaker
 
             _circuitState = CircuitState.Closed;
             Reset();
-
-            _circuitActivitySubject = new Subject<ICircuitEvent>();
         }
-
-        public IObservable<ICircuitEvent> CircuitActivity => _circuitActivitySubject;
 
         public CircuitState CircuitState
         {
@@ -90,13 +85,6 @@ namespace Polly.CircuitBreaker
                 _lastOutcome = new DelegateResult<TResult>(new IsolatedCircuitException("The circuit is manually held open and is not allowing calls."));
                 BreakFor_NeedsLock(TimeSpan.MaxValue, Context.None);
                 _circuitState = CircuitState.Isolated;
-
-                _circuitActivitySubject?.OnNext(new CircuitEvent
-                {
-                    State = _circuitState,
-                    Ticks = SystemClock.UtcNow().Ticks,
-                    Action = CircuitAction.Isolate
-                });
             }
         }
 
@@ -132,53 +120,10 @@ namespace Polly.CircuitBreaker
             {
                 _onReset(context);
             }
-
-            _circuitActivitySubject?.OnNext(new CircuitEvent
-            {
-                State = _circuitState,
-                Ticks = SystemClock.UtcNow().Ticks,
-                Action = CircuitAction.Reset
-            });
-        }
-
-        protected void SuccessInternal_NeedsLock(Context context)
-        {
-            _circuitActivitySubject?.OnNext(new CircuitExecuteEvent
-            {
-                State = _circuitState,
-                Ticks = SystemClock.UtcNow().Ticks,
-                Action = CircuitAction.PostExecute,
-                OutcomeType = OutcomeType.Successful,
-                ExecutionGuid = context.ExecutionGuid,
-                ExecutionKey = context.ExecutionKey
-            });
-        }
-
-        protected void FailureInternal_NeedsLock(Context context)
-        {
-            _circuitActivitySubject?.OnNext(new CircuitExecuteEvent
-            {
-                State = _circuitState,
-                Ticks = SystemClock.UtcNow().Ticks,
-                Action = CircuitAction.PostExecute,
-                OutcomeType = OutcomeType.Failure,
-                Exception = _lastOutcome?.Exception,
-                ExecutionGuid = context.ExecutionGuid,
-                ExecutionKey = context.ExecutionKey
-            });
         }
 
         public void OnActionPreExecute(Context context)
         {
-            _circuitActivitySubject?.OnNext(new CircuitExecuteEvent
-            {
-                State = _circuitState,
-                Ticks = SystemClock.UtcNow().Ticks,
-                Action = CircuitAction.PreExecute,
-                ExecutionGuid = context.ExecutionGuid,
-                ExecutionKey = context.ExecutionKey
-            });
-
             switch (CircuitState)
             {
                 case CircuitState.Closed:

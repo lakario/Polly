@@ -3,24 +3,31 @@ using System.Collections.Generic;
 using Polly.Utilities;
 using System.Threading;
 using Polly.Shared.CircuitBreaker;
+using Polly.Metrics;
 
 namespace Polly.CircuitBreaker
 {
     /// <summary>
     /// A circuit-breaker policy that can be applied to delegates.
     /// </summary>
-    public partial class CircuitBreakerPolicy : Policy
+    public partial class CircuitBreakerPolicy : Policy, IEventSource
     {
         private readonly ICircuitController<EmptyStruct> _breakerController;
 
         internal CircuitBreakerPolicy(
             Action<Action<CancellationToken>, Context, CancellationToken> exceptionPolicy,
             IEnumerable<ExceptionPredicate> exceptionPredicates,
-            ICircuitController<EmptyStruct> breakerController
-            ) : base(exceptionPolicy, exceptionPredicates)
+            ICircuitController<EmptyStruct> breakerController,
+            IEventsBroker eventsBroker
+            ) : base(exceptionPolicy, exceptionPredicates, eventsBroker)
         {
             _breakerController = breakerController;
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public IObservable<IPolicyEvent> PolicyEvents => EventsBroker.Events;
 
         /// <summary>
         /// Gets the state of the underlying circuit.
@@ -28,22 +35,6 @@ namespace Polly.CircuitBreaker
         public CircuitState CircuitState
         {
             get { return _breakerController.CircuitState; }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public IHealthCount HealthCount
-        {
-            get { return _breakerController.HealthCount; }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public IObservable<ICircuitEvent> CircuitActivity
-        {
-            get { return _breakerController.CircuitActivity; }
         }
 
         /// <summary>
@@ -60,6 +51,8 @@ namespace Polly.CircuitBreaker
         public void Isolate()
         {
             _breakerController.Isolate();
+
+            EventsBroker.OnCustomEvent(new CircuitData(CircuitState), nameof(Isolate));
         }
 
         /// <summary>
@@ -68,13 +61,20 @@ namespace Polly.CircuitBreaker
         public void Reset()
         {
             _breakerController.Reset();
+
+            EventsBroker.OnCustomEvent(new CircuitData(CircuitState), nameof(Reset));
+        }
+
+        void IEventSource.EnableMetrics()
+        {
+            EventsBroker.Enable();
         }
     }
 
     /// <summary>
     /// A circuit-breaker policy that can be applied to delegates returning a value of type <typeparam name="TResult"/>.
     /// </summary>
-    public partial class CircuitBreakerPolicy<TResult> : Policy<TResult>
+    public partial class CircuitBreakerPolicy<TResult> : Policy<TResult>, IEventSource
     {
         private readonly ICircuitController<TResult> _breakerController;
 
@@ -82,11 +82,17 @@ namespace Polly.CircuitBreaker
             Func<Func<CancellationToken, TResult>, Context, CancellationToken, TResult> executionPolicy,
             IEnumerable<ExceptionPredicate> exceptionPredicates,
             IEnumerable<ResultPredicate<TResult>> resultPredicates,
-            ICircuitController<TResult> breakerController
-            ) : base(executionPolicy, exceptionPredicates, resultPredicates)
+            ICircuitController<TResult> breakerController,
+            IEventsBroker eventsBroker
+            ) : base(executionPolicy, exceptionPredicates, resultPredicates, eventsBroker)
         {
             _breakerController = breakerController;
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public IObservable<IPolicyEvent> PolicyEvents => EventsBroker.Events;
 
         /// <summary>
         /// Gets the state of the underlying circuit.
@@ -127,6 +133,10 @@ namespace Polly.CircuitBreaker
         {
             _breakerController.Reset();
         }
-    }
 
+        void IEventSource.EnableMetrics()
+        {
+            EventsBroker.Enable();
+        }
+    }
 }

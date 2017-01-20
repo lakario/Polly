@@ -1,5 +1,6 @@
 ﻿using System;
 using Polly.CircuitBreaker;
+using Polly.Metrics;
 
 namespace Polly
 {
@@ -173,12 +174,16 @@ namespace Polly
             if (onReset == null) throw new ArgumentNullException("onReset");
             if (onHalfOpen == null) throw new ArgumentNullException("onHalfOpen");
 
+
             ICircuitController<TResult> breakerController = new ConsecutiveCountCircuitController<TResult>(
                 handledEventsAllowedBeforeBreaking,
                 durationOfBreak,
                 onBreak,
                 onReset,
                 onHalfOpen);
+
+            var metricsService = new EventsBroker();
+
             return new CircuitBreakerPolicy<TResult>(
                 (action, context, cancellationToken) => CircuitBreakerEngine.Implementation(
                     action,
@@ -186,10 +191,12 @@ namespace Polly
                     cancellationToken,
                     policyBuilder.ExceptionPredicates,
                     policyBuilder.ResultPredicates,
-                    breakerController),
+                    breakerController,
+                    metricsService),
                 policyBuilder.ExceptionPredicates,
                 policyBuilder.ResultPredicates,
-                breakerController
+                breakerController,
+                metricsService
                 );
         }
     }

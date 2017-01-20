@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Polly.CircuitBreaker;
+using Polly.Metrics;
 using Polly.Utilities;
 
 namespace Polly
@@ -201,6 +202,8 @@ namespace Polly
             if (onReset == null) throw new ArgumentNullException("onReset");
             if (onHalfOpen == null) throw new ArgumentNullException("onHalfOpen");
 
+            var metricsService = new EventsBroker();
+
             var breakerController = new AdvancedCircuitController<EmptyStruct>(
                 failureThreshold, 
                 samplingDuration, 
@@ -216,9 +219,11 @@ namespace Polly
                     cancellationToken,
                     policyBuilder.ExceptionPredicates, 
                     PredicateHelper<EmptyStruct>.EmptyResultPredicates, 
-                    breakerController), 
+                    breakerController,
+                    metricsService), 
                 policyBuilder.ExceptionPredicates, 
-                breakerController
+                breakerController,
+                metricsService
                 );
         }
     }
