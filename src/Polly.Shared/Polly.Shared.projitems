@@ -31,7 +31,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)CircuitBreaker\CircuitBreakerEngineAsync.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)CircuitBreaker\CircuitBreakerPolicy.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)CircuitBreaker\CircuitBreakerPolicyAsync.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)CircuitBreaker\CircuitData.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)CircuitBreaker\CircuitBreakerData.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)CircuitBreaker\ConsecutiveCountCircuitController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)CircuitBreaker\CircuitState.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)CircuitBreaker\CircuitStateController.cs" />

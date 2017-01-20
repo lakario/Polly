@@ -20,7 +20,7 @@ namespace Polly.CircuitBreaker
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            eventsBroker?.OnActionPreExecute(new CircuitData(breakerController.CircuitState), context);
+            eventsBroker?.OnActionPreExecute(new CircuitBreakerData(breakerController.CircuitState, breakerController.HealthCount), context);
 
             breakerController.OnActionPreExecute(context);
 
@@ -32,20 +32,20 @@ namespace Polly.CircuitBreaker
                 {
                     breakerController.OnActionFailure(delegateOutcome, context);
 
-                    eventsBroker?.OnActionPostExecute(new CircuitData(breakerController.CircuitState), context, OutcomeType.Failure, delegateOutcome.Exception);
+                    eventsBroker?.OnActionPostExecute(new CircuitBreakerData(breakerController.CircuitState, breakerController.HealthCount), context, OutcomeType.Failure, delegateOutcome.Exception);
                 }
                 else
                 {
                     breakerController.OnActionSuccess(context);
 
-                    eventsBroker?.OnActionPostExecute(new CircuitData(breakerController.CircuitState), context, OutcomeType.Successful);
+                    eventsBroker?.OnActionPostExecute(new CircuitBreakerData(breakerController.CircuitState, breakerController.HealthCount), context, OutcomeType.Successful);
                 }
 
                 return delegateOutcome.Result;
             }
             catch (Exception ex)
             {
-                eventsBroker?.OnActionPostExecute(new CircuitData(breakerController.CircuitState), context, OutcomeType.Failure, ex);
+                eventsBroker?.OnActionPostExecute(new CircuitBreakerData(breakerController.CircuitState, breakerController.HealthCount), context, OutcomeType.Failure, ex);
 
                 if (!shouldHandleExceptionPredicates.Any(predicate => predicate(ex)))
                 {
