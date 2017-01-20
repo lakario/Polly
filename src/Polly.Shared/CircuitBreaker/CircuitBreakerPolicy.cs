@@ -52,7 +52,7 @@ namespace Polly.CircuitBreaker
         {
             _breakerController.Isolate();
 
-            EventsBroker.OnCustomEvent(new CircuitData(CircuitState), nameof(Isolate));
+            EventsBroker?.OnCustomEvent(new CircuitData(CircuitState), nameof(Isolate));
         }
 
         /// <summary>
@@ -62,7 +62,7 @@ namespace Polly.CircuitBreaker
         {
             _breakerController.Reset();
 
-            EventsBroker.OnCustomEvent(new CircuitData(CircuitState), nameof(Reset));
+            EventsBroker?.OnCustomEvent(new CircuitData(CircuitState), nameof(Reset));
         }
 
         void IEventSource.EnableMetrics()
@@ -124,6 +124,8 @@ namespace Polly.CircuitBreaker
         public void Isolate()
         {
             _breakerController.Isolate();
+
+            EventsBroker?.OnCustomEvent(new CircuitData(CircuitState), nameof(Isolate));
         }
 
         /// <summary>
@@ -137,6 +139,8 @@ namespace Polly.CircuitBreaker
         void IEventSource.EnableMetrics()
         {
             EventsBroker.Enable();
+
+            EventsBroker?.OnCustomEvent(new CircuitData(CircuitState), nameof(Isolate));
         }
     }
 }
