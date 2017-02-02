@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using Polly.Shared.CircuitBreaker;
+using Polly.CircuitBreaker;
 using Polly.Metrics;
+using Polly;
 
 namespace Polly.CircuitBreaker
 {
@@ -13,16 +14,16 @@ namespace Polly.CircuitBreaker
             Func<CancellationToken, TResult> action,
             Context context,
             CancellationToken cancellationToken,
-            IEnumerable<ExceptionPredicate> shouldHandleExceptionPredicates, 
-            IEnumerable<ResultPredicate<TResult>> shouldHandleResultPredicates, 
+            IEnumerable<ExceptionPredicate> shouldHandleExceptionPredicates,
+            IEnumerable<ResultPredicate<TResult>> shouldHandleResultPredicates,
             ICircuitController<TResult> breakerController,
-            IEventsBroker eventsBroker)
+            IPolicyPipeline<TResult> policyPipeline)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            eventsBroker?.OnActionPreExecute(new CircuitBreakerData(breakerController.CircuitState, breakerController.HealthCount), context);
-
             breakerController.OnActionPreExecute(context);
+
+            policyPipeline.OnActionPreExecute(context);
 
             try
             {
@@ -30,29 +31,31 @@ namespace Polly.CircuitBreaker
 
                 if (shouldHandleResultPredicates.Any(predicate => predicate(delegateOutcome.Result)))
                 {
-                    breakerController.OnActionFailure(delegateOutcome, context);
+                    policyPipeline?.OnActionFailure(context, delegateOutcome);
 
-                    eventsBroker?.OnActionPostExecute(new CircuitBreakerData(breakerController.CircuitState, breakerController.HealthCount), context, OutcomeType.Failure, delegateOutcome.Exception);
+                    breakerController.OnActionFailure(context, delegateOutcome);
                 }
                 else
                 {
-                    breakerController.OnActionSuccess(context);
+                    policyPipeline?.OnActionSuccess(context);
 
-                    eventsBroker?.OnActionPostExecute(new CircuitBreakerData(breakerController.CircuitState, breakerController.HealthCount), context, OutcomeType.Successful);
+                    breakerController.OnActionSuccess(context);
                 }
 
                 return delegateOutcome.Result;
             }
             catch (Exception ex)
             {
-                eventsBroker?.OnActionPostExecute(new CircuitBreakerData(breakerController.CircuitState, breakerController.HealthCount), context, OutcomeType.Failure, ex);
+                var result = new DelegateResult<TResult>(ex);
+
+                policyPipeline?.OnActionFailure(context, result);
 
                 if (!shouldHandleExceptionPredicates.Any(predicate => predicate(ex)))
                 {
                     throw;
                 }
 
-                breakerController.OnActionFailure(new DelegateResult<TResult>(ex), context);
+                breakerController.OnActionFailure(context, result);
 
                 throw;
             }

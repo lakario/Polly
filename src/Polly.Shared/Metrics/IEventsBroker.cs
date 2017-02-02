@@ -7,9 +7,10 @@ namespace Polly.Metrics
     {
         bool Enabled { get; }
         IObservable<IPolicyEvent> Events { get; }
-        void OnActionPreExecute(PolicyData data, Context context);
-        void OnActionPostExecute(PolicyData data, Context context, OutcomeType outcomeType, Exception exception = null);
-        void OnCustomEvent(PolicyData data, string eventType);
+        void OnActionPreExecute(Context context, PolicyEventData eventData = null);
+        void OnActionSuccess(Context context, PolicyEventData eventData = null);
+        void OnActionFailure(Context context, Exception exception, PolicyEventData eventData = null);
+        void OnCustomEvent(string eventType, PolicyEventData eventData = null);
         void Enable();
         void Disable();
     }

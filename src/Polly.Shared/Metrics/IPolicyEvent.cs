@@ -1,72 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text;
 
 namespace Polly.Metrics
 {
     /// <summary>
-    /// 
+    /// A base type for an event emitted by a policy.
     /// </summary>
     public interface IPolicyEvent
     {
         /// <summary>
-        /// 
+        /// The UTC timestamp of the event in ticks.
         /// </summary>
         long Ticks { get; }
 
         /// <summary>
-        /// 
+        /// Policy-specific data captured at the time of the event.
         /// </summary>
-        PolicyData Data { get; }
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    public interface IPolicyExecuteEvent : IPolicyEvent
-    {
-        /// <summary>
-        /// 
-        /// </summary>
-        Guid ExecutionGuid { get; }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        string ExecutionKey { get; }
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    public interface IPolicyPreExecuteEvent : IPolicyExecuteEvent
-    {
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    public interface IPolicyPostExecuteEvent : IPolicyExecuteEvent
-    {
-        /// <summary>
-        /// 
-        /// </summary>
-        OutcomeType OutcomeType { get; }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        Exception Exception { get; }
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    public interface IPolicyCustomEvent : IPolicyEvent
-    {
-        /// <summary>
-        /// 
-        /// </summary>
-        string EventType { get; }
+        PolicyEventData EventData { get; }
     }
 }

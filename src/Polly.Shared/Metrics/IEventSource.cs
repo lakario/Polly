@@ -17,6 +17,6 @@ namespace Polly.Metrics
         /// <summary>
         /// 
         /// </summary>
-        void EnableMetrics();
+        void EnableEvents();
     }
 }

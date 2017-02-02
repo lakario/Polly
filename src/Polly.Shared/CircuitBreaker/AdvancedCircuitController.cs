@@ -65,7 +65,7 @@ namespace Polly.CircuitBreaker
             }
         }
 
-        public override void OnActionFailure(DelegateResult<TResult> outcome, Context context)
+        public override void OnActionFailure(Context context, DelegateResult<TResult> outcome)
         {
             using (TimedLock.Lock(_lock))
             {

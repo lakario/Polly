@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Polly.Retry;
 using System.Linq;
+using Polly.Metrics;
 
 namespace Polly
 {
@@ -61,17 +62,18 @@ namespace Polly
             if (retryCount < 0) throw new ArgumentOutOfRangeException("retryCount", "Value must be greater than or equal to zero.");
             if (onRetry == null) throw new ArgumentNullException("onRetry");
 
+            var eventsBroker = new EventsBroker();
+            var pipeline = new PolicyPipelineWithEvents<TResult>(eventsBroker);
+
             return new RetryPolicy<TResult>(
                 (action, context, cancellationToken) => RetryEngine.Implementation<TResult>(
-                    action,
+                    action, context,
                     cancellationToken,
                     policyBuilder.ExceptionPredicates,
                     policyBuilder.ResultPredicates,
-                    () => new RetryPolicyStateWithCount<TResult>(retryCount, (outcome, i, ctx) => onRetry(outcome, i), context)
-                ),
+                    () => new RetryPolicyStateWithCount<TResult>(retryCount, (outcome, i, ctx) => onRetry(outcome, i), context), pipeline),
                 policyBuilder.ExceptionPredicates,
-                policyBuilder.ResultPredicates
-            );
+                policyBuilder.ResultPredicates, eventsBroker);
         }
 
         /// <summary>
@@ -102,16 +104,18 @@ namespace Polly
             if (retryCount < 0) throw new ArgumentOutOfRangeException("retryCount", "Value must be greater than or equal to zero.");
             if (onRetry == null) throw new ArgumentNullException("onRetry");
 
+            var eventsBroker = new EventsBroker();
+            var pipeline = new PolicyPipelineWithEvents<TResult>(eventsBroker);
+
             return new RetryPolicy<TResult>(
                 (action, context, cancellationToken) => RetryEngine.Implementation(
-                    action,
+                    action, context,
                     cancellationToken,
                     policyBuilder.ExceptionPredicates,
                     policyBuilder.ResultPredicates,
-                    () => new RetryPolicyStateWithCount<TResult>(retryCount, onRetry, context)
-                ), 
+                    () => new RetryPolicyStateWithCount<TResult>(retryCount, onRetry, context), pipeline), 
                 policyBuilder.ExceptionPredicates,
-                policyBuilder.ResultPredicates);
+                policyBuilder.ResultPredicates, eventsBroker);
         }
 
         /// <summary>
@@ -138,17 +142,18 @@ namespace Polly
         {
             if (onRetry == null) throw new ArgumentNullException("onRetry");
 
+            var eventsBroker = new EventsBroker();
+            var pipeline = new PolicyPipelineWithEvents<TResult>(eventsBroker);
+
             return new RetryPolicy<TResult>(
                 (action, context, cancellationToken) => RetryEngine.Implementation(
-                    action,
+                    action, context,
                     cancellationToken,
                     policyBuilder.ExceptionPredicates,
                     policyBuilder.ResultPredicates,
-                    () => new RetryPolicyState<TResult>((outcome, ctx) => onRetry(outcome.Exception), context)
-                ),
+                    () => new RetryPolicyState<TResult>((outcome, ctx) => onRetry(outcome.Exception), context), pipeline),
                 policyBuilder.ExceptionPredicates,
-                policyBuilder.ResultPredicates
-            );
+                policyBuilder.ResultPredicates, eventsBroker);
         }
 
         /// <summary>
@@ -163,16 +168,18 @@ namespace Polly
         {
             if (onRetry == null) throw new ArgumentNullException("onRetry");
 
+            var eventsBroker = new EventsBroker();
+            var pipeline = new PolicyPipelineWithEvents<TResult>(eventsBroker);
+
             return new RetryPolicy<TResult>(
                 (action, context, cancellationToken) => RetryEngine.Implementation(
-                    action,
+                    action, context,
                     cancellationToken,
                     policyBuilder.ExceptionPredicates,
                     policyBuilder.ResultPredicates,
-                    () => new RetryPolicyState<TResult>(onRetry, context)
-                    ), 
+                    () => new RetryPolicyState<TResult>(onRetry, context), pipeline), 
                 policyBuilder.ExceptionPredicates,
-                policyBuilder.ResultPredicates);
+                policyBuilder.ResultPredicates, eventsBroker);
         }
 
         /// <summary>
@@ -217,17 +224,18 @@ namespace Polly
             var sleepDurations = Enumerable.Range(1, retryCount)
                                            .Select(sleepDurationProvider);
 
+            var eventsBroker = new EventsBroker();
+            var pipeline = new PolicyPipelineWithEvents<TResult>(eventsBroker);
+
             return new RetryPolicy<TResult>(
                 (action, context, cancellationToken) => RetryEngine.Implementation(
-                    action,
+                    action, context,
                     cancellationToken,
                     policyBuilder.ExceptionPredicates,
                     policyBuilder.ResultPredicates,
-                    () => new RetryPolicyStateWithSleep<TResult>(sleepDurations, (outcome, span, ctx) => onRetry(outcome, span), context)
-                ),
+                    () => new RetryPolicyStateWithSleep<TResult>(sleepDurations, (outcome, span, ctx) => onRetry(outcome, span), context), pipeline),
                 policyBuilder.ExceptionPredicates,
-                policyBuilder.ResultPredicates
-            );
+                policyBuilder.ResultPredicates, eventsBroker);
         }
 
         /// <summary>
@@ -256,16 +264,18 @@ namespace Polly
             var sleepDurations = Enumerable.Range(1, retryCount)
                                            .Select(sleepDurationProvider);
 
+            var eventsBroker = new EventsBroker();
+            var pipeline = new PolicyPipelineWithEvents<TResult>(eventsBroker);
+
             return new RetryPolicy<TResult>(
                 (action, context, cancellationToken) => RetryEngine.Implementation(
-                    action,
+                    action, context,
                     cancellationToken,
                     policyBuilder.ExceptionPredicates,
                     policyBuilder.ResultPredicates,
-                    () => new RetryPolicyStateWithSleep<TResult>(sleepDurations, onRetry, context)
-                ), 
+                    () => new RetryPolicyStateWithSleep<TResult>(sleepDurations, onRetry, context), pipeline), 
                 policyBuilder.ExceptionPredicates,
-                policyBuilder.ResultPredicates);
+                policyBuilder.ResultPredicates, eventsBroker);
         }
 
         /// <summary>
@@ -294,16 +304,18 @@ namespace Polly
             var sleepDurations = Enumerable.Range(1, retryCount)
                                            .Select(sleepDurationProvider);
 
+            var eventsBroker = new EventsBroker();
+            var pipeline = new PolicyPipelineWithEvents<TResult>(eventsBroker);
+
             return new RetryPolicy<TResult>(
                 (action, context, cancellationToken) => RetryEngine.Implementation(
-                    action,
+                    action, context,
                     cancellationToken,
                     policyBuilder.ExceptionPredicates,
                     policyBuilder.ResultPredicates,
-                    () => new RetryPolicyStateWithSleep<TResult>(sleepDurations, onRetry, context)
-                ), 
+                    () => new RetryPolicyStateWithSleep<TResult>(sleepDurations, onRetry, context), pipeline), 
             policyBuilder.ExceptionPredicates,
-            policyBuilder.ResultPredicates);
+            policyBuilder.ResultPredicates, eventsBroker);
         }
 
         /// <summary>
@@ -339,17 +351,18 @@ namespace Polly
             if (sleepDurations == null) throw new ArgumentNullException("sleepDurations");
             if (onRetry == null) throw new ArgumentNullException("onRetry");
 
+            var eventsBroker = new EventsBroker();
+            var pipeline = new PolicyPipelineWithEvents<TResult>(eventsBroker);
+
             return new RetryPolicy<TResult>(
                 (action, context, cancellationToken) => RetryEngine.Implementation(
-                    action,
+                    action, context,
                     cancellationToken,
                     policyBuilder.ExceptionPredicates,
                     policyBuilder.ResultPredicates,
-                    () => new RetryPolicyStateWithSleep<TResult>(sleepDurations, (outcome, span, ctx) => onRetry(outcome, span), context)
-                ),
+                    () => new RetryPolicyStateWithSleep<TResult>(sleepDurations, (outcome, span, ctx) => onRetry(outcome, span), context), pipeline),
                 policyBuilder.ExceptionPredicates,
-                policyBuilder.ResultPredicates
-            );
+                policyBuilder.ResultPredicates, eventsBroker);
         }
 
         /// <summary>
@@ -371,17 +384,18 @@ namespace Polly
             if (sleepDurations == null) throw new ArgumentNullException("sleepDurations");
             if (onRetry == null) throw new ArgumentNullException("onRetry");
 
+            var eventsBroker = new EventsBroker();
+            var pipeline = new PolicyPipelineWithEvents<TResult>(eventsBroker);
+
             return new RetryPolicy<TResult>(
                 (action, context, cancellationToken) => RetryEngine.Implementation(
-                    action,
+                    action, context,
                     cancellationToken,
                     policyBuilder.ExceptionPredicates,
                     policyBuilder.ResultPredicates,
-                    () => new RetryPolicyStateWithSleep<TResult>(sleepDurations, onRetry, context)
-                    ),
+                    () => new RetryPolicyStateWithSleep<TResult>(sleepDurations, onRetry, context), pipeline),
                 policyBuilder.ExceptionPredicates,
-                policyBuilder.ResultPredicates
-            );
+                policyBuilder.ResultPredicates, eventsBroker);
         }
 
         /// <summary>
@@ -403,17 +417,18 @@ namespace Polly
             if (sleepDurations == null) throw new ArgumentNullException("sleepDurations");
             if (onRetry == null) throw new ArgumentNullException("onRetry");
 
+            var eventsBroker = new EventsBroker();
+            var pipeline = new PolicyPipelineWithEvents<TResult>(eventsBroker);
+
             return new RetryPolicy<TResult>(
                 (action, context, cancellationToken) => RetryEngine.Implementation(
-                    action,
+                    action, context,
                     cancellationToken,
                     policyBuilder.ExceptionPredicates,
                     policyBuilder.ResultPredicates,
-                    () => new RetryPolicyStateWithSleep<TResult>(sleepDurations, onRetry, context)
-                ), 
+                    () => new RetryPolicyStateWithSleep<TResult>(sleepDurations, onRetry, context), pipeline), 
                 policyBuilder.ExceptionPredicates,
-                policyBuilder.ResultPredicates
-            );
+                policyBuilder.ResultPredicates, eventsBroker);
         }
 
         /// <summary>
@@ -447,17 +462,18 @@ namespace Polly
             if (sleepDurationProvider == null) throw new ArgumentNullException("sleepDurationProvider");
             if (onRetry == null) throw new ArgumentNullException("onRetry");
 
+            var eventsBroker = new EventsBroker();
+            var pipeline = new PolicyPipelineWithEvents<TResult>(eventsBroker);
+
             return new RetryPolicy<TResult>(
                 (action, context, cancellationToken) => RetryEngine.Implementation(
-                    action,
+                    action, context,
                     cancellationToken,
                     policyBuilder.ExceptionPredicates,
                     policyBuilder.ResultPredicates,
-                    () => new RetryPolicyStateWithSleepDurationProvider<TResult>(sleepDurationProvider, (outcome, timespan, ctx) => onRetry(outcome, timespan), context)
-                ),
+                    () => new RetryPolicyStateWithSleepDurationProvider<TResult>(sleepDurationProvider, (outcome, timespan, ctx) => onRetry(outcome, timespan), context), pipeline),
                 policyBuilder.ExceptionPredicates,
-                policyBuilder.ResultPredicates
-            );
+                policyBuilder.ResultPredicates, eventsBroker);
         }
 
         /// <summary>
@@ -476,17 +492,18 @@ namespace Polly
             if (sleepDurationProvider == null) throw new ArgumentNullException("sleepDurationProvider");
             if (onRetry == null) throw new ArgumentNullException("onRetry");
 
+            var eventsBroker = new EventsBroker();
+            var pipeline = new PolicyPipelineWithEvents<TResult>(eventsBroker);
+
             return new RetryPolicy<TResult>(
                 (action, context, cancellationToken) => RetryEngine.Implementation(
-                    action,
+                    action, context,
                     cancellationToken,
                     policyBuilder.ExceptionPredicates,
                     policyBuilder.ResultPredicates,
-                    () => new RetryPolicyStateWithSleepDurationProvider<TResult>(sleepDurationProvider, onRetry, context)
-                ), 
+                    () => new RetryPolicyStateWithSleepDurationProvider<TResult>(sleepDurationProvider, onRetry, context), pipeline), 
                 policyBuilder.ExceptionPredicates,
-                policyBuilder.ResultPredicates
-            );
+                policyBuilder.ResultPredicates, eventsBroker);
         }
     }
 }

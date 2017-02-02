@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Reactive.Subjects;
-using Polly.Shared.CircuitBreaker;
+using Polly.Metrics;
+using Polly;
+using Polly.CircuitBreaker;
 using Polly.Utilities;
 
 namespace Polly.CircuitBreaker
@@ -15,6 +17,7 @@ namespace Polly.CircuitBreaker
         protected readonly Action<Context> _onReset;
         protected readonly Action _onHalfOpen;
         protected readonly object _lock = new object();
+        protected readonly IEventsBroker _eventsBroker;
 
         protected CircuitStateController(TimeSpan durationOfBreak, Action<DelegateResult<TResult>, TimeSpan, Context> onBreak, Action<Context> onReset, Action onHalfOpen)
         {
@@ -22,6 +25,7 @@ namespace Polly.CircuitBreaker
             _onBreak = onBreak;
             _onReset = onReset;
             _onHalfOpen = onHalfOpen;
+            _eventsBroker = new EventsBroker();
 
             _circuitState = CircuitState.Closed;
             Reset();
@@ -47,6 +51,8 @@ namespace Polly.CircuitBreaker
                 }
             }
         }
+
+        public IObservable<IPolicyEvent> Events => _eventsBroker.Events;
 
         public Exception LastException
         {
@@ -82,6 +88,8 @@ namespace Polly.CircuitBreaker
         {
             using (TimedLock.Lock(_lock))
             {
+                _eventsBroker.OnCustomEvent(nameof(CircuitBreakerPolicy.Isolate), new CircuitBreakerEventData(CircuitState, HealthCount));
+
                 _lastOutcome = new DelegateResult<TResult>(new IsolatedCircuitException("The circuit is manually held open and is not allowing calls."));
                 BreakFor_NeedsLock(TimeSpan.MaxValue, Context.None);
                 _circuitState = CircuitState.Isolated;
@@ -142,7 +150,7 @@ namespace Polly.CircuitBreaker
 
         public abstract void OnActionSuccess(Context context);
 
-        public abstract void OnActionFailure(DelegateResult<TResult> outcome, Context context);
+        public abstract void OnActionFailure(Context context, DelegateResult<TResult> outcome);
 
         public abstract void OnCircuitReset(Context context);
 

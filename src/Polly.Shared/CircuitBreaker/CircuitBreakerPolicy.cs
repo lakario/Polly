@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using Polly.Utilities;
 using System.Threading;
-using Polly.Shared.CircuitBreaker;
+using Polly.CircuitBreaker;
 using Polly.Metrics;
+using Polly;
 
 namespace Polly.CircuitBreaker
 {
@@ -13,21 +14,24 @@ namespace Polly.CircuitBreaker
     public partial class CircuitBreakerPolicy : Policy, IEventSource
     {
         private readonly ICircuitController<EmptyStruct> _breakerController;
+        private readonly IEventsBroker _eventsBroker;
+
 
         internal CircuitBreakerPolicy(
             Action<Action<CancellationToken>, Context, CancellationToken> exceptionPolicy,
             IEnumerable<ExceptionPredicate> exceptionPredicates,
             ICircuitController<EmptyStruct> breakerController,
             IEventsBroker eventsBroker
-            ) : base(exceptionPolicy, exceptionPredicates, eventsBroker)
+            ) : base(exceptionPolicy, exceptionPredicates)
         {
             _breakerController = breakerController;
+            _eventsBroker = eventsBroker;
         }
 
         /// <summary>
-        /// 
+        /// A reactive stream of events emitted by the policy.
         /// </summary>
-        public IObservable<IPolicyEvent> PolicyEvents => EventsBroker.Events;
+        public IObservable<IPolicyEvent> PolicyEvents => _eventsBroker.Events;
 
         /// <summary>
         /// Gets the state of the underlying circuit.
@@ -51,8 +55,6 @@ namespace Polly.CircuitBreaker
         public void Isolate()
         {
             _breakerController.Isolate();
-
-            EventsBroker?.OnCustomEvent(new CircuitBreakerData(CircuitState, _breakerController.HealthCount), nameof(Isolate));
         }
 
         /// <summary>
@@ -61,13 +63,11 @@ namespace Polly.CircuitBreaker
         public void Reset()
         {
             _breakerController.Reset();
-
-            EventsBroker?.OnCustomEvent(new CircuitBreakerData(CircuitState, _breakerController.HealthCount), nameof(Reset));
         }
 
-        void IEventSource.EnableMetrics()
+        void IEventSource.EnableEvents()
         {
-            EventsBroker.Enable();
+            _eventsBroker.Enable();
         }
     }
 
@@ -77,22 +77,18 @@ namespace Polly.CircuitBreaker
     public partial class CircuitBreakerPolicy<TResult> : Policy<TResult>, IEventSource
     {
         private readonly ICircuitController<TResult> _breakerController;
+        private readonly IEventsBroker _eventsBroker;
 
-        internal CircuitBreakerPolicy(
-            Func<Func<CancellationToken, TResult>, Context, CancellationToken, TResult> executionPolicy,
-            IEnumerable<ExceptionPredicate> exceptionPredicates,
-            IEnumerable<ResultPredicate<TResult>> resultPredicates,
-            ICircuitController<TResult> breakerController,
-            IEventsBroker eventsBroker
-            ) : base(executionPolicy, exceptionPredicates, resultPredicates, eventsBroker)
+        internal CircuitBreakerPolicy(Func<Func<CancellationToken, TResult>, Context, CancellationToken, TResult> executionPolicy, IEnumerable<ExceptionPredicate> exceptionPredicates, IEnumerable<ResultPredicate<TResult>> resultPredicates, ICircuitController<TResult> breakerController, IEventsBroker eventsBroker) : base(executionPolicy, exceptionPredicates, resultPredicates)
         {
             _breakerController = breakerController;
+            _eventsBroker = eventsBroker;
         }
 
         /// <summary>
         /// 
         /// </summary>
-        public IObservable<IPolicyEvent> PolicyEvents => EventsBroker.Events;
+        public IObservable<IPolicyEvent> PolicyEvents => _eventsBroker.Events;
 
         /// <summary>
         /// Gets the state of the underlying circuit.
@@ -124,8 +120,6 @@ namespace Polly.CircuitBreaker
         public void Isolate()
         {
             _breakerController.Isolate();
-
-            EventsBroker?.OnCustomEvent(new CircuitBreakerData(CircuitState, _breakerController.HealthCount), nameof(Isolate));
         }
 
         /// <summary>
@@ -136,11 +130,9 @@ namespace Polly.CircuitBreaker
             _breakerController.Reset();
         }
 
-        void IEventSource.EnableMetrics()
+        void IEventSource.EnableEvents()
         {
-            EventsBroker.Enable();
-
-            EventsBroker?.OnCustomEvent(new CircuitBreakerData(CircuitState, _breakerController.HealthCount), nameof(Isolate));
+            _eventsBroker?.Enable();
         }
     }
 }

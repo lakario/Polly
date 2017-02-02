@@ -29,7 +29,7 @@ namespace Polly.CircuitBreaker
 
                 if (shouldHandleResultPredicates.Any(predicate => predicate(delegateOutcome.Result)))
                 {
-                    breakerController.OnActionFailure(delegateOutcome, context);
+                    breakerController.OnActionFailure(context, delegateOutcome);
                 }
                 else
                 {
@@ -45,7 +45,7 @@ namespace Polly.CircuitBreaker
                     throw;
                 }
 
-                breakerController.OnActionFailure(new DelegateResult<TResult>(ex), context);
+                breakerController.OnActionFailure(context, new DelegateResult<TResult>(ex));
 
                 throw;
             }

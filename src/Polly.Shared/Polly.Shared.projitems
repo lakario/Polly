@@ -31,7 +31,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)CircuitBreaker\CircuitBreakerEngineAsync.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)CircuitBreaker\CircuitBreakerPolicy.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)CircuitBreaker\CircuitBreakerPolicyAsync.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)CircuitBreaker\CircuitBreakerData.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)CircuitBreaker\CircuitBreakerEventData.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)CircuitBreaker\ConsecutiveCountCircuitController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)CircuitBreaker\CircuitState.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)CircuitBreaker\CircuitStateController.cs" />
@@ -56,19 +56,30 @@
     <Compile Include="$(MSBuildThisFileDirectory)Fallback\FallbackEngineAsync.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Fallback\FallbackPolicy.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Fallback\FallbackPolicyAsync.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IPolicyPipeline.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Metrics\IEventsBroker.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Metrics\IEventSource.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Metrics\IActionExecutePolicyEvent.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Metrics\IActionPostExecutePolicyEvent.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Metrics\IActionPreExecutePolicyEvent.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Metrics\ICustomPolicyEvent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Metrics\IPolicyEvent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Metrics\EventsBroker.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Metrics\MetricsSyntax.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Metrics\ActionExecutePolicyEvent.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Metrics\ActionPostExecutePolicyEvent.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Metrics\ActionPreExecutePolicyEvent.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Metrics\CustomPolicyEvent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Metrics\PolicyEvent.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Metrics\PolicyData.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Metrics\PolicyEventData.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Policy.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Policy.HandleSyntax.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Policy.ContextAndKeys.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)PolicyAsync.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)PolicyBuilder.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)PolicyBuilder.OrSyntax.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)PolicyPipeline.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)PolicyPipelineWithEvents.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)PolicyResult.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ResultPredicate.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Retry\RetrySyntax.cs" />
@@ -115,8 +126,5 @@
     <Compile Include="$(MSBuildThisFileDirectory)Wrap\PolicyWrapAsync.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Wrap\PolicyWrapEngine.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Wrap\PolicyWrapEngineAsync.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)Metrics\Policy.Metrics.cs" />
   </ItemGroup>
 </Project>

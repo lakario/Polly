@@ -16,7 +16,7 @@ namespace Polly
         public static TPolicy WithMetrics<TPolicy>(this TPolicy metricsSource)
             where TPolicy : IEventSource
         {
-            metricsSource.EnableMetrics();
+            metricsSource.EnableEvents();
 
             return metricsSource;
         }

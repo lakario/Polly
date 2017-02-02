@@ -1,6 +1,6 @@
 ﻿using System;
 using Polly.Metrics;
-using Polly.Shared.CircuitBreaker;
+using Polly.CircuitBreaker;
 
 namespace Polly.CircuitBreaker
 {
@@ -15,6 +15,6 @@ namespace Polly.CircuitBreaker
         void OnCircuitReset(Context context);
         void OnActionPreExecute(Context context);
         void OnActionSuccess(Context context);
-        void OnActionFailure(DelegateResult<TResult> outcome, Context context);
+        void OnActionFailure(Context context, DelegateResult<TResult> outcome);
     }
 }

@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using Polly.CircuitBreaker;
 using Polly.Metrics;
+using Polly;
 using Polly.Utilities;
 
 namespace Polly
@@ -202,8 +203,6 @@ namespace Polly
             if (onReset == null) throw new ArgumentNullException("onReset");
             if (onHalfOpen == null) throw new ArgumentNullException("onHalfOpen");
 
-            var metricsService = new EventsBroker();
-
             var breakerController = new AdvancedCircuitController<EmptyStruct>(
                 failureThreshold, 
                 samplingDuration, 
@@ -212,6 +211,11 @@ namespace Polly
                 (outcome, timespan, context) => onBreak(outcome.Exception, timespan, context), 
                 onReset, 
                 onHalfOpen);
+
+            var eventsBroker = new EventsBroker();
+            var pipeline = new PolicyPipelineWithEvents<EmptyStruct>(eventsBroker, 
+                () => new CircuitBreakerEventData(breakerController.CircuitState, breakerController.HealthCount));
+
             return new CircuitBreakerPolicy(
                 (action, context, cancellationToken) => CircuitBreakerEngine.Implementation<EmptyStruct>(
                     (ct) => { action(ct); return EmptyStruct.Instance; },
@@ -220,10 +224,10 @@ namespace Polly
                     policyBuilder.ExceptionPredicates, 
                     PredicateHelper<EmptyStruct>.EmptyResultPredicates, 
                     breakerController,
-                    metricsService), 
+                    pipeline), 
                 policyBuilder.ExceptionPredicates, 
                 breakerController,
-                metricsService
+                eventsBroker
                 );
         }
     }

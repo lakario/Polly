@@ -1,15 +1,15 @@
 ﻿using Polly.CircuitBreaker;
 using Polly.Metrics;
 
-namespace Polly.Shared.CircuitBreaker
+namespace Polly.CircuitBreaker
 {
-    internal class CircuitBreakerData : PolicyData
+    internal class CircuitBreakerEventData : PolicyEventData
     {
         public CircuitState State { get; set; }
 
         public IHealthCount HealthCount { get; set; }
 
-        public CircuitBreakerData(CircuitState state, IHealthCount healthCount)
+        public CircuitBreakerEventData(CircuitState state, IHealthCount healthCount)
         {
             State = state;
             HealthCount = healthCount;
