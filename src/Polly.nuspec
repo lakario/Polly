@@ -2,7 +2,7 @@
 <package>
   <metadata>
     <id>Polly</id>
-    <version>9.9.9.9</version>
+    <version>$version$</version>
     <owners>App vNext</owners>
     <authors>Michael Wolfenden, App vNext</authors>
     <description>
