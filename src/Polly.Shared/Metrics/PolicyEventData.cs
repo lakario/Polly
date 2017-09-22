@@ -9,5 +9,9 @@ namespace Polly.Metrics
     /// </summary>
     public abstract class PolicyEventData
     {
+        /// <summary>
+        /// 
+        /// </summary>
+        public IDictionary<string, object> Data { get; } = new Dictionary<string, object>();
     }
 }
